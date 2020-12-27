@@ -1,12 +1,12 @@
-var speed = 3
+var speed = 2
 
 var lastT = 0
 var origX = 0.5
 var origY = 0.5
+var maxD = maxDist(origX, origY)
 
-var cIdx = 0
-
-var hMap = array(10)
+var hCount = 9
+var hMap = array(hCount)
 // The values below were subjectively chosen for perceived equidistant color
 hMap[0] = 0.00  // red
 hMap[1] = 0.015 // orange
@@ -17,10 +17,18 @@ hMap[5] = 0.65  // blue
 hMap[6] = 0.70  // indigo
 hMap[7] = 0.77  // purple
 hMap[8] = 0.985 // pink
-hMap[9] = 1.00  // red again - same as 0
 
-var cStart = hMap[cIdx]
-var cEnd = hMap[(cIdx + 1) % 10]
+var cIdx = 0
+var cStart = hMap[0]
+var cEnd = hMap[1]
+
+function maxDist(x, y) {
+  x1 = x * x
+  x2 = (1 - x) * (1 - x)
+  y1 = y * y
+  y2 = (1 - y) * (1 - y)
+  return sqrt(max(x1, x2) + max(y1, y2))
+}
 
 export function beforeRender(delta) {
   t1 = time(speed * .02)
@@ -29,9 +37,15 @@ export function beforeRender(delta) {
   if (lastT - t1 > 0.9) {
     origX = random(1)
     origY = random(1)
+    maxD = maxDist(origX, origY)
 
     cStart = hMap[cIdx]
-    cEnd = hMap[(cIdx + 1) % 10]
+    cIdx += 1
+    cIdx %= hCount
+    cEnd = hMap[cIdx]
+    if (cEnd < cStart) {
+      cEnd += 1
+    }
   }
 
   lastT = t1
@@ -44,7 +58,8 @@ export function render2D(index, x, y) {
 
 
   // Get pixel distance from center
-  r = sqrt(x * x + y * y)
+  d = sqrt(x * x + y * y)
+  r = d
 
   // We have a color wave of width 0.2 and sparks of width 0.25
   // To ensure that the last spark is over before we start a new wave, we need
@@ -55,8 +70,8 @@ export function render2D(index, x, y) {
 
   // Start the wave at t1 = 0
   // Wave v is +ve if triangle > 0.75 so about 1/4 duty cycle
-  r += t1
-  r += (3/8)
+  r -= t1
+  r -= (3/8)
 
   // Spark trails wave by 0.2
   // (overlaps the wave a bit since the wave runs for a quarter cycle)
@@ -64,16 +79,16 @@ export function render2D(index, x, y) {
   spark = triangle(r + .2) - .75 > random(2)
 
   if (spark) {
-    hsv(cEnd, 1, 1)
+    hsv(cEnd, 0.97, 1)
   } else {
     v = triangle(r) - .75
 
     v *= 4 // bring the triangle's peak back to 0-1 range
     v = v * v * v // gives more definition to the wave, preserve negatives
-    v *= 0.8 // reduce wave brightness to give the sparks a bit more *zing*
+    v *= 0.4 // reduce wave brightness to give the sparks a bit more *zing*
 
     // range hue from start to end of the current palette
-    h = cStart + (cEnd - cStart) * t1
+    h = cStart + (cEnd - cStart) * (d / maxD)
 
     hsv(h, 1, v)
   }
