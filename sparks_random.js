@@ -79,13 +79,13 @@ export function render2D(index, x, y) {
   spark = triangle(r + .2) - .75 > random(2)
 
   if (spark) {
-    hsv(cEnd, 0.97, 1)
+    hsv(cEnd, 0.94, 1)
   } else {
     v = triangle(r) - .75
 
     v *= 4 // bring the triangle's peak back to 0-1 range
     v = v * v * v // gives more definition to the wave, preserve negatives
-    v *= 0.4 // reduce wave brightness to give the sparks a bit more *zing*
+    v *= 0.2 // reduce wave brightness to give the sparks a bit more *zing*
 
     // range hue from start to end of the current palette
     h = cStart + (cEnd - cStart) * (d / maxD)
